@@ -110,6 +110,7 @@ gl.bindAttribLocation(program, 1, "NORMAL");
 gl.linkProgram(program);
 console.log(gl.getShaderInfoLog(vert));
 console.log(gl.getShaderInfoLog(frag));
+
 const viewProjectionLoc = gl.getUniformLocation(program, "viewProjection");
 
 const vertexArray = gl.createVertexArray();
@@ -144,16 +145,15 @@ requestAnimationFrame(function frame() {
   mat4.ortho(projection, -100, 100, -80, 80, 0, 320); // alternatively
   mat4.perspective(projection, Math.PI / 4, aspectRatio, 0.01, +Infinity);
   mat4.multiply(viewProjection, projection, view);
+
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   gl.useProgram(program);
   gl.bindVertexArray(vertexArray);
   gl.uniformMatrix4fv(viewProjectionLoc, false, viewProjection);
-  gl.frontFace(gl.CCW);
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
-  gl.disable(gl.BLEND);
   gl.drawArrays(gl.TRIANGLES, 0, position.length / 3);
   gl.bindVertexArray(null);
 

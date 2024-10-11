@@ -370,37 +370,37 @@ function runMarchingCubes(
         if (e7 < isolevel) cubeindex += 128;
         const edge = edgeTable[cubeindex];
         if (edge !== 0) {
-          const norm0x = e1 - data.src[dataindex - dx];
-          const norm0y = e4 - data.src[dataindex - dy];
-          const norm0z = e3 - data.src[dataindex - dz];
+          const norm0x = data.src[dataindex - dx] - e1;
+          const norm0y = data.src[dataindex - dy] - e4;
+          const norm0z = data.src[dataindex - dz] - e3;
 
-          const norm1x = data.src[dataindex + dx * 2] - e0;
-          const norm1y = e5 - data.src[dataindex + dx - dy];
-          const norm1z = e2 - data.src[dataindex + dx - dz];
+          const norm1x = e0 - data.src[dataindex + dx * 2];
+          const norm1y = data.src[dataindex + dx - dy] - e5;
+          const norm1z = data.src[dataindex + dx - dz] - e2;
 
-          const norm2x = data.src[dataindex + dx * 2 + dz] - e3;
-          const norm2y = e6 - data.src[dataindex + dx - dy + dz];
-          const norm2z = data.src[dataindex + dx + dz * 2] - e1;
+          const norm2x = e3 - data.src[dataindex + dx * 2 + dz];
+          const norm2y = data.src[dataindex + dx - dy + dz] - e6;
+          const norm2z = e1 - data.src[dataindex + dx + dz * 2];
 
-          const norm3x = e2 - data.src[dataindex - dx + dz];
-          const norm3y = e7 - data.src[dataindex - dy + dz];
-          const norm3z = data.src[dataindex + dz * 2] - e0;
+          const norm3x = data.src[dataindex - dx + dz] - e2;
+          const norm3y = data.src[dataindex - dy + dz] - e7;
+          const norm3z = e0 - data.src[dataindex + dz * 2];
 
-          const norm4x = e5 - data.src[dataindex - dx + dy];
-          const norm4y = data.src[dataindex + dy * 2] - e0;
-          const norm4z = e7 - data.src[dataindex + dy - dz];
+          const norm4x = data.src[dataindex - dx + dy] - e5;
+          const norm4y = e0 - data.src[dataindex + dy * 2];
+          const norm4z = data.src[dataindex + dy - dz] - e7;
 
-          const norm5x = data.src[dataindex + dx * 2 + dy] - e4;
-          const norm5y = data.src[dataindex + dx + dy * 2] - e1;
-          const norm5z = e6 - data.src[dataindex + dx + dy - dz];
+          const norm5x = e4 - data.src[dataindex + dx * 2 + dy];
+          const norm5y = e1 - data.src[dataindex + dx + dy * 2];
+          const norm5z = data.src[dataindex + dx + dy - dz] - e6;
 
-          const norm6x = data.src[dataindex + dx * 2 + dy + dz] - e7;
-          const norm6y = data.src[dataindex + dx + dy * 2 + dz] - e2;
-          const norm6z = data.src[dataindex + dx + dy + dz * 2] - e5;
+          const norm6x = e7 - data.src[dataindex + dx * 2 + dy + dz];
+          const norm6y = e2 - data.src[dataindex + dx + dy * 2 + dz];
+          const norm6z = e5 - data.src[dataindex + dx + dy + dz * 2];
 
-          const norm7x = e6 - data.src[dataindex - dx + dy + dz];
-          const norm7y = data.src[dataindex + dy * 2 + dz] - e3;
-          const norm7z = data.src[dataindex + dy + dz * 2] - e4;
+          const norm7x = data.src[dataindex - dx + dy + dz] - e6;
+          const norm7y = e3 - data.src[dataindex + dy * 2 + dz];
+          const norm7z = e4 - data.src[dataindex + dy + dz * 2];
 
           if (edge & 1) {
             const mu = (isolevel - e0) / (e1 - e0);
@@ -517,13 +517,13 @@ function runMarchingCubes(
             const e = edges[t[i]];
             const n = normalEdges[t[i]];
             vertices[vIdx] = e[0];
-            normals[vIdx] = -n[0];
+            normals[vIdx] = n[0];
             vIdx++;
             vertices[vIdx] = e[1];
-            normals[vIdx] = -n[1];
+            normals[vIdx] = n[1];
             vIdx++;
             vertices[vIdx] = e[2];
-            normals[vIdx] = -n[2];
+            normals[vIdx] = n[2];
             vIdx++;
           }
         }
