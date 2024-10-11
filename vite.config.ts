@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/that-game-tetrominoes-fall/",
+  base: "/marching-cubes/",
   root: "src",
   build: {
     outDir: "../dist",

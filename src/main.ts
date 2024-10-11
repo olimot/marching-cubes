@@ -1,6 +1,56 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
+import { up } from "./config";
+import { listenInputEvents } from "./input";
+import runMarchingCubes from "./marching-cubes";
+import rawURL from "./mri-200x160x160.raw?url";
+import { moveXY, pinchOrbit, rotateOrbit } from "./orbital";
+
+const projection = mat4.create();
+const target = vec3.fromValues(100, 80, 80);
+const view = mat4.create();
+const viewProjection = mat4.identity(mat4.create());
+const buffer = await fetch(rawURL).then((res) => res.arrayBuffer());
+const original = new Uint8Array(buffer);
+const field = {
+  width: 200,
+  height: 160,
+  depth: 160,
+  src: new Uint8Array(original.length),
+};
+
+for (let z = 0; z < field.depth; z += 1) {
+  for (let y = 0; y < field.height; y += 1) {
+    for (let x = 0; x < field.width; x += 1) {
+      field.src[z * field.width * field.height + y * field.width + x] =
+        original[
+          (field.depth - y) * field.width * field.height +
+            (field.depth - z) * field.width +
+            x
+        ];
+    }
+  }
+}
+
+console.time("Marching Cubes");
+const [position, normal] = runMarchingCubes(field, 90);
+console.timeEnd("Marching Cubes");
 
 const canvas = document.getElementById("screen") as HTMLCanvasElement;
+
+mat4.lookAt(view, [100, 80, 320], target, up);
+
+listenInputEvents(canvas, ({ keys, delta, buttons }) => {
+  if ((keys.Space && keys.ShiftLeft) || buttons === 5) {
+    rotateOrbit(view, target, delta);
+  } else if ((keys.Space && keys.ControlLeft) || buttons === 6) {
+    pinchOrbit(view, target, delta);
+  } else if (keys.Space || buttons === 4) {
+    moveXY(view, target, delta);
+  } else {
+    return;
+  }
+});
+
 const gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -15,7 +65,7 @@ gl.blendFuncSeparate(
 );
 gl.blendEquation(gl.FUNC_ADD);
 gl.colorMask(true, true, true, true);
-gl.clearColor(0.3, 0.3, 0.3, 1);
+gl.clearColor(31 / 255, 31 / 255, 31 / 255, 1);
 gl.clearDepth(1);
 
 const vert = gl.createShader(gl.VERTEX_SHADER) as WebGLShader;
@@ -26,9 +76,11 @@ gl.shaderSource(
   uniform mat4 viewProjection;
   in vec4 POSITION;
   in vec3 NORMAL;
+  out vec3 vPosition;
   out vec3 vNormal;
   void main() {
-    vNormal = NORMAL;
+    vPosition = POSITION.xyz;
+    vNormal = normalize(NORMAL);
     gl_Position = viewProjection * POSITION;
   }
 `,
@@ -37,10 +89,14 @@ gl.shaderSource(
   frag,
   /* glsl */ `#version 300 es
   precision highp float;
+  in vec3 vPosition;
   in vec3 vNormal;
   out vec4 finalColor;
   void main() {
-    finalColor = vec4((vNormal + 1.f) / 2.f, 1.f);
+    vec3 normal;
+    normal = normalize(cross(dFdx(vPosition), dFdy(vPosition)));
+    normal = vNormal;
+    finalColor = vec4((normal + 1.f) / 2.f, 1.f);
   }
 `,
 );
@@ -56,28 +112,18 @@ console.log(gl.getShaderInfoLog(vert));
 console.log(gl.getShaderInfoLog(frag));
 const viewProjectionLoc = gl.getUniformLocation(program, "viewProjection");
 
-const projection = mat4.create();
-const view = mat4.create();
-const viewProjection = mat4.create();
-
 const vertexArray = gl.createVertexArray();
 gl.bindVertexArray(vertexArray);
 
-const elements = new Uint32Array([0, 1, 2]);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, elements, gl.STATIC_DRAW);
-
-const position = new Float32Array([-1, 0, 0, 0, 1, 0, 1, 0, 0]);
 gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
 gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW);
 gl.enableVertexAttribArray(0);
 gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
-const normal = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
 gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
 gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW);
-gl.enableVertexAttribArray(0);
-gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(1);
+gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
 
 gl.bindVertexArray(null);
 
@@ -93,12 +139,11 @@ const observer = new ResizeObserver(([entry]) => {
 });
 observer.observe(canvas, { box: "content-box" });
 
-requestAnimationFrame(() => {
+requestAnimationFrame(function frame() {
   const aspectRatio = canvas.clientWidth / canvas.clientHeight;
-  mat4.perspective(projection, Math.PI / 4, aspectRatio, 0.00001, +Infinity);
-  mat4.invert(view, mat4.targetTo(view, [0, 0, -1], [0, 0, 0], [0, 1, 0]));
+  mat4.ortho(projection, -100, 100, -80, 80, 0, 320); // alternatively
+  mat4.perspective(projection, Math.PI / 4, aspectRatio, 0.01, +Infinity);
   mat4.multiply(viewProjection, projection, view);
-
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -109,7 +154,10 @@ requestAnimationFrame(() => {
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);
-  gl.drawElements(gl.TRIANGLES, elements.length, gl.UNSIGNED_INT, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, position.length / 3);
+  gl.bindVertexArray(null);
+
+  requestAnimationFrame(frame);
 });
 
 export {};
