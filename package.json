@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "keywords": [],
+  "author": "olimot",
+  "license": "MIT",
+  "scripts": {
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "eslint": "^9.9.0",
+    "globals": "^15.9.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.1.0",
+    "vite": "^5.4.7"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  }
+}
