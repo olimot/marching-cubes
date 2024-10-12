@@ -1,7 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
 import { up } from "../config";
 import { listenInputEvents } from "../input";
-import polygonize from "../marching-cubes";
+import polygonize from "./marching-cubes";
 import { moveXY, pinchOrbit, rotateOrbit } from "../orbital";
 import rawURL from "../u8-mri-200x160x160.raw?url";
 
