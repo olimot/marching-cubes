@@ -6,21 +6,18 @@ import { moveXY, pinchOrbit, rotateOrbit } from "../orbital";
 import rawURL from "../u8-mri-200x160x160.raw?url";
 import triTableURL from "../u8-tri-table-256x16.bin?url";
 
-const projection = mat4.create();
-const target = vec3.fromValues(100, 80, 80);
-const view = mat4.create();
-const viewProjection = mat4.identity(mat4.create());
+const triTable = await fetch(triTableURL).then(async (res) => {
+  return new Uint8Array(await res.arrayBuffer());
+});
+
 const buffer = await fetch(rawURL).then((res) => res.arrayBuffer());
 const original = new Uint8Array(buffer);
 const field = {
   width: 200,
   height: 160,
   depth: 160,
-  src: new Float32Array(original.length),
+  src: new Uint8Array(original),
 };
-export const triTable = await fetch(triTableURL).then(async (res) => {
-  return new Uint8Array(await res.arrayBuffer());
-});
 
 for (let z = 0; z < field.depth; z += 1) {
   for (let y = 0; y < field.height; y += 1) {
@@ -35,9 +32,12 @@ for (let z = 0; z < field.depth; z += 1) {
   }
 }
 
-const canvas = document.getElementById("screen") as HTMLCanvasElement;
+const projection = mat4.create();
+const target = vec3.fromValues(100, 80, 80);
+const view = mat4.lookAt(mat4.create(), [100, 80, -320], target, up);
+const viewProjection = mat4.identity(mat4.create());
 
-mat4.lookAt(view, [100, 80, -320], target, up);
+const canvas = document.getElementById("screen") as HTMLCanvasElement;
 
 listenInputEvents(canvas, ({ keys, delta, buttons }) => {
   if ((keys.Space && keys.ShiftLeft) || buttons === 5) {
@@ -134,13 +134,13 @@ gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
 gl.texImage3D(
   gl.TEXTURE_3D,
   0,
-  gl.R32F,
+  gl.R8UI,
   field.width,
   field.height,
   field.depth,
   0,
-  gl.RED,
-  gl.FLOAT,
+  gl.RED_INTEGER,
+  gl.UNSIGNED_BYTE,
   field.src,
 );
 gl.uniform1i(fieldLoc, 1);

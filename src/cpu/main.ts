@@ -5,17 +5,13 @@ import polygonize from "./marching-cubes";
 import { moveXY, pinchOrbit, rotateOrbit } from "../orbital";
 import rawURL from "../u8-mri-200x160x160.raw?url";
 
-const projection = mat4.create();
-const target = vec3.fromValues(100, 80, 80);
-const view = mat4.create();
-const viewProjection = mat4.identity(mat4.create());
 const buffer = await fetch(rawURL).then((res) => res.arrayBuffer());
 const original = new Uint8Array(buffer);
 const field = {
   width: 200,
   height: 160,
   depth: 160,
-  src: new Uint8Array(original.length),
+  src: new Uint8Array(original),
 };
 
 for (let z = 0; z < field.depth; z += 1) {
@@ -30,6 +26,11 @@ for (let z = 0; z < field.depth; z += 1) {
     }
   }
 }
+
+const projection = mat4.create();
+const target = vec3.fromValues(100, 80, 80);
+const view = mat4.lookAt(mat4.create(), [100, 80, -320], target, up);
+const viewProjection = mat4.identity(mat4.create());
 
 console.time("Marching Cubes");
 const [position, normal] = polygonize(field, 90);
