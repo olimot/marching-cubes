@@ -117,37 +117,37 @@ function polygonize(
         if (v7 < isolevel) cubeindex += 128;
         const edge = edgeTable[cubeindex];
         if (edge !== 0) {
-          const norm0x = data.src[dataindex - dx] - v1;
-          const norm0y = data.src[dataindex - dy] - v4;
-          const norm0z = data.src[dataindex - dz] - v3;
+          const norm0x = v1 - data.src[dataindex - dx];
+          const norm0y = v4 - data.src[dataindex - dy];
+          const norm0z = v3 - data.src[dataindex - dz];
 
-          const norm1x = v0 - data.src[dataindex + dx * 2];
-          const norm1y = data.src[dataindex + dx - dy] - v5;
-          const norm1z = data.src[dataindex + dx - dz] - v2;
+          const norm1x = data.src[dataindex + dx * 2] - v0;
+          const norm1y = v5 - data.src[dataindex + dx - dy];
+          const norm1z = v2 - data.src[dataindex + dx - dz];
 
-          const norm2x = v3 - data.src[dataindex + dx * 2 + dz];
-          const norm2y = data.src[dataindex + dx - dy + dz] - v6;
-          const norm2z = v1 - data.src[dataindex + dx + dz * 2];
+          const norm2x = data.src[dataindex + dx * 2 + dz] - v3;
+          const norm2y = v6 - data.src[dataindex + dx - dy + dz];
+          const norm2z = data.src[dataindex + dx + dz * 2] - v1;
 
-          const norm3x = data.src[dataindex - dx + dz] - v2;
-          const norm3y = data.src[dataindex - dy + dz] - v7;
-          const norm3z = v0 - data.src[dataindex + dz * 2];
+          const norm3x = v2 - data.src[dataindex - dx + dz];
+          const norm3y = v7 - data.src[dataindex - dy + dz];
+          const norm3z = data.src[dataindex + dz * 2] - v0;
 
-          const norm4x = data.src[dataindex - dx + dy] - v5;
-          const norm4y = v0 - data.src[dataindex + dy * 2];
-          const norm4z = data.src[dataindex + dy - dz] - v7;
+          const norm4x = v5 - data.src[dataindex - dx + dy];
+          const norm4y = data.src[dataindex + dy * 2] - v0;
+          const norm4z = v7 - data.src[dataindex + dy - dz];
 
-          const norm5x = v4 - data.src[dataindex + dx * 2 + dy];
-          const norm5y = v1 - data.src[dataindex + dx + dy * 2];
-          const norm5z = data.src[dataindex + dx + dy - dz] - v6;
+          const norm5x = data.src[dataindex + dx * 2 + dy] - v4;
+          const norm5y = data.src[dataindex + dx + dy * 2] - v1;
+          const norm5z = v6 - data.src[dataindex + dx + dy - dz];
 
-          const norm6x = v7 - data.src[dataindex + dx * 2 + dy + dz];
-          const norm6y = v2 - data.src[dataindex + dx + dy * 2 + dz];
-          const norm6z = v5 - data.src[dataindex + dx + dy + dz * 2];
+          const norm6x = data.src[dataindex + dx * 2 + dy + dz] - v7;
+          const norm6y = data.src[dataindex + dx + dy * 2 + dz] - v2;
+          const norm6z = data.src[dataindex + dx + dy + dz * 2] - v5;
 
-          const norm7x = data.src[dataindex - dx + dy + dz] - v6;
-          const norm7y = v3 - data.src[dataindex + dy * 2 + dz];
-          const norm7z = v4 - data.src[dataindex + dy + dz * 2];
+          const norm7x = v6 - data.src[dataindex - dx + dy + dz];
+          const norm7y = data.src[dataindex + dy * 2 + dz] - v3;
+          const norm7z = data.src[dataindex + dy + dz * 2] - v4;
 
           if (edge & 1) {
             const mu = (isolevel - v0) / (v1 - v0);
@@ -259,31 +259,19 @@ function polygonize(
           }
 
           for (let i = 0; i < 15; i++) {
-            const uv = (255 - cubeindex) * 16 + i;
-            const tvIdx = triTable[uv];
-            if (tvIdx === 255) {
-              positions[vIdx] = 0;
-              normals[vIdx] = 0;
-              vIdx++;
-              positions[vIdx] = 0;
-              normals[vIdx] = 0;
-              vIdx++;
-              positions[vIdx] = 320;
-              normals[vIdx] = 1;
-              vIdx++;
-            } else {
-              const e = edges[tvIdx];
-              const n = normalEdges[tvIdx];
-              positions[vIdx] = e[0];
-              normals[vIdx] = n[0];
-              vIdx++;
-              positions[vIdx] = e[1];
-              normals[vIdx] = n[1];
-              vIdx++;
-              positions[vIdx] = e[2];
-              normals[vIdx] = n[2];
-              vIdx++;
-            }
+            const tvIdx = triTable[(255 - cubeindex) * 16 + i];
+            if (tvIdx === 255) break;
+            const e = edges[tvIdx];
+            const n = normalEdges[tvIdx];
+            positions[vIdx] = e[0];
+            normals[vIdx] = n[0];
+            vIdx++;
+            positions[vIdx] = e[1];
+            normals[vIdx] = n[1];
+            vIdx++;
+            positions[vIdx] = e[2];
+            normals[vIdx] = n[2];
+            vIdx++;
           }
         }
       }

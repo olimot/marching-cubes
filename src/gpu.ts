@@ -29,7 +29,7 @@ for (let z = 0; z < field.depth; z += 1) {
         original[
           (field.depth - y) * field.width * field.height +
             (field.depth - z) * field.width +
-            x
+            (field.width - x)
         ];
     }
   }
@@ -37,7 +37,7 @@ for (let z = 0; z < field.depth; z += 1) {
 
 const canvas = document.getElementById("screen") as HTMLCanvasElement;
 
-mat4.lookAt(view, [100, 80, 320], target, up);
+mat4.lookAt(view, [100, 80, -320], target, up);
 
 listenInputEvents(canvas, ({ keys, delta, buttons }) => {
   if ((keys.Space && keys.ShiftLeft) || buttons === 5) {

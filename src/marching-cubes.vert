@@ -12,9 +12,9 @@ out vec3 vNormal;
 vec4 getValue(ivec3 p) {
   vec4 value;
   value.w = (texelFetch(field, ivec3(p.x, p.y, p.z), 0).x);
-  value.x = (texelFetch(field, ivec3(p.x - 1, p.y, p.z), 0).x) - float(texelFetch(field, ivec3(p.x + 1, p.y, p.z), 0).x);
-  value.y = (texelFetch(field, ivec3(p.x, p.y - 1, p.z), 0).x) - float(texelFetch(field, ivec3(p.x, p.y + 1, p.z), 0).x);
-  value.z = (texelFetch(field, ivec3(p.x, p.y, p.z - 1), 0).x) - float(texelFetch(field, ivec3(p.x, p.y, p.z + 1), 0).x);
+  value.x = float(texelFetch(field, ivec3(p.x + 1, p.y, p.z), 0).x) - (texelFetch(field, ivec3(p.x - 1, p.y, p.z), 0).x);
+  value.y = float(texelFetch(field, ivec3(p.x, p.y + 1, p.z), 0).x) - (texelFetch(field, ivec3(p.x, p.y - 1, p.z), 0).x);
+  value.z = float(texelFetch(field, ivec3(p.x, p.y, p.z + 1), 0).x) - (texelFetch(field, ivec3(p.x, p.y, p.z - 1), 0).x);
   return value;
 }
 
