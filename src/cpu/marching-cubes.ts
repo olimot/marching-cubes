@@ -1,4 +1,4 @@
-import triTableURL from "./u8-tri-table-256x16.bin?url";
+import triTableURL from "../u8-tri-table-256x16.bin?url";
 
 export const triTable = await fetch(triTableURL).then(async (res) => {
   return new Uint8Array(await res.arrayBuffer());
