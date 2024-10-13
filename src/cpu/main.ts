@@ -21,15 +21,24 @@ for (let z = 0; z < field.depth; z += 1) {
         original[
           (field.depth - y) * field.width * field.height +
             (field.depth - z) * field.width +
-            (field.width - x)
+            x
         ];
     }
   }
 }
 
 const projection = mat4.create();
-const target = vec3.fromValues(100, 80, 80);
-const view = mat4.lookAt(mat4.create(), [100, 80, -320], target, up);
+const target = vec3.fromValues(
+  field.width / 2,
+  field.height / 2,
+  field.depth / 2,
+);
+const view = mat4.lookAt(
+  mat4.create(),
+  [field.width / 2, field.height / 2, field.depth * 2],
+  target,
+  up,
+);
 const viewProjection = mat4.identity(mat4.create());
 
 console.time("Marching Cubes");
@@ -37,9 +46,6 @@ const [position, normal] = polygonize(field, 90);
 console.timeEnd("Marching Cubes");
 
 const canvas = document.getElementById("screen") as HTMLCanvasElement;
-
-mat4.lookAt(view, [100, 80, -320], target, up);
-
 listenInputEvents(canvas, ({ keys, delta, buttons }) => {
   if ((keys.Space && keys.ShiftLeft) || buttons === 5) {
     rotateOrbit(view, target, delta);

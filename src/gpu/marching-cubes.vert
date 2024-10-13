@@ -9,18 +9,22 @@ uniform ivec3 fieldSize;
 out vec3 vPosition;
 out vec3 vNormal;
 
+float getScalar(ivec3 p) {
+  return float(texelFetch(field, ivec3(p.x, p.y, p.z), 0).x);
+}
+
 vec4 getValue(ivec3 p) {
   vec4 value;
-  value.w = float(texelFetch(field, ivec3(p.x, p.y, p.z), 0).x);
-  value.x = float(texelFetch(field, ivec3(p.x + 1, p.y, p.z), 0).x) - float(texelFetch(field, ivec3(p.x - 1, p.y, p.z), 0).x);
-  value.y = float(texelFetch(field, ivec3(p.x, p.y + 1, p.z), 0).x) - float(texelFetch(field, ivec3(p.x, p.y - 1, p.z), 0).x);
-  value.z = float(texelFetch(field, ivec3(p.x, p.y, p.z + 1), 0).x) - float(texelFetch(field, ivec3(p.x, p.y, p.z - 1), 0).x);
+  value.w = getScalar(p);
+  value.x = getScalar(ivec3(p.x - 1, p.y, p.z)) - getScalar(ivec3(p.x + 1, p.y, p.z));
+  value.y = getScalar(ivec3(p.x, p.y - 1, p.z)) - getScalar(ivec3(p.x, p.y + 1, p.z));
+  value.z = getScalar(ivec3(p.x, p.y, p.z - 1)) - getScalar(ivec3(p.x, p.y, p.z + 1));
   return value;
 }
 
 void main() {
-  int width = fieldSize[0];
-  int height = fieldSize[1];
+  int width = fieldSize[0] - 1;
+  int height = fieldSize[1] - 1;
 
   int z = gl_VertexID / (width * height * 15);
   int y = (gl_VertexID / (width * 15)) % height;
@@ -45,34 +49,34 @@ void main() {
   vec4 value7 = getValue(pos7);
 
   int cubeindex = 0;
-  if (value0.w < isolevel) {
+  if(value0.w < isolevel) {
     cubeindex += 1;
   }
-  if (value1.w < isolevel) {
+  if(value1.w < isolevel) {
     cubeindex += 2;
   }
-  if (value2.w < isolevel) {
+  if(value2.w < isolevel) {
     cubeindex += 4;
   }
-  if (value3.w < isolevel) {
+  if(value3.w < isolevel) {
     cubeindex += 8;
   }
-  if (value4.w < isolevel) {
+  if(value4.w < isolevel) {
     cubeindex += 16;
   }
-  if (value5.w < isolevel) {
+  if(value5.w < isolevel) {
     cubeindex += 32;
   }
-  if (value6.w < isolevel) {
+  if(value6.w < isolevel) {
     cubeindex += 64;
   }
-  if (value7.w < isolevel) {
+  if(value7.w < isolevel) {
     cubeindex += 128;
   }
 
   uint tvIdx = texelFetch(triTable, ivec2(i, 255 - cubeindex), 0).x;
 
-  if (tvIdx == 255u) {
+  if(tvIdx == 255u) {
     gl_Position = vec4(0, 0, 0, 0);
     vNormal = vec3(0, 0, 0);
   } else {
@@ -80,7 +84,7 @@ void main() {
     ivec3 posB;
     vec4 valueA;
     vec4 valueB;
-    switch (tvIdx) {
+    switch(tvIdx) {
       case 0u:
         posA = pos0;
         posB = pos1;

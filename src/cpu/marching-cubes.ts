@@ -94,9 +94,9 @@ function polygonize(
   const dz = data.width * data.height;
   const dy = data.width;
   const dx = 1;
-  for (let z = 0; z < data.depth; z += 1) {
-    for (let y = 0; y < data.height; y += 1) {
-      for (let x = 0; x < data.width; x += 1) {
+  for (let z = 0; z < data.depth - 1; z += 1) {
+    for (let y = 0; y < data.height - 1; y += 1) {
+      for (let x = 0; x < data.width - 1; x += 1) {
         const dataindex = x * dx + y * dy + z * dz;
         const v0 = data.src[dataindex];
         const v1 = data.src[dataindex + dx];
@@ -117,37 +117,37 @@ function polygonize(
         if (v7 < isolevel) cubeindex += 128;
         const edge = edgeTable[cubeindex];
         if (edge !== 0) {
-          const norm0x = v1 - data.src[dataindex - dx];
-          const norm0y = v4 - data.src[dataindex - dy];
-          const norm0z = v3 - data.src[dataindex - dz];
+          const norm0x = data.src[dataindex - dx] - v1;
+          const norm0y = data.src[dataindex - dy] - v4;
+          const norm0z = data.src[dataindex - dz] - v3;
 
-          const norm1x = data.src[dataindex + dx * 2] - v0;
-          const norm1y = v5 - data.src[dataindex + dx - dy];
-          const norm1z = v2 - data.src[dataindex + dx - dz];
+          const norm1x = v0 - data.src[dataindex + dx * 2];
+          const norm1y = data.src[dataindex + dx - dy]- v5;
+          const norm1z = data.src[dataindex + dx - dz]- v2;
 
-          const norm2x = data.src[dataindex + dx * 2 + dz] - v3;
-          const norm2y = v6 - data.src[dataindex + dx - dy + dz];
-          const norm2z = data.src[dataindex + dx + dz * 2] - v1;
+          const norm2x = v3 - data.src[dataindex + dx * 2 + dz];
+          const norm2y = data.src[dataindex + dx - dy + dz] - v6;
+          const norm2z = v1 - data.src[dataindex + dx + dz * 2];
 
-          const norm3x = v2 - data.src[dataindex - dx + dz];
-          const norm3y = v7 - data.src[dataindex - dy + dz];
-          const norm3z = data.src[dataindex + dz * 2] - v0;
+          const norm3x = data.src[dataindex - dx + dz] - v2;
+          const norm3y = data.src[dataindex - dy + dz] - v7;
+          const norm3z = v0 - data.src[dataindex + dz * 2];
 
-          const norm4x = v5 - data.src[dataindex - dx + dy];
-          const norm4y = data.src[dataindex + dy * 2] - v0;
-          const norm4z = v7 - data.src[dataindex + dy - dz];
+          const norm4x = data.src[dataindex - dx + dy] - v5;
+          const norm4y = v0 - data.src[dataindex + dy * 2];
+          const norm4z = data.src[dataindex + dy - dz] - v7;
 
-          const norm5x = data.src[dataindex + dx * 2 + dy] - v4;
-          const norm5y = data.src[dataindex + dx + dy * 2] - v1;
-          const norm5z = v6 - data.src[dataindex + dx + dy - dz];
+          const norm5x = v4 - data.src[dataindex + dx * 2 + dy];
+          const norm5y = v1 - data.src[dataindex + dx + dy * 2];
+          const norm5z = data.src[dataindex + dx + dy - dz] - v6;
 
-          const norm6x = data.src[dataindex + dx * 2 + dy + dz] - v7;
-          const norm6y = data.src[dataindex + dx + dy * 2 + dz] - v2;
-          const norm6z = data.src[dataindex + dx + dy + dz * 2] - v5;
+          const norm6x = v7 - data.src[dataindex + dx * 2 + dy + dz];
+          const norm6y = v2 - data.src[dataindex + dx + dy * 2 + dz];
+          const norm6z = v5 - data.src[dataindex + dx + dy + dz * 2];
 
-          const norm7x = v6 - data.src[dataindex - dx + dy + dz];
-          const norm7y = data.src[dataindex + dy * 2 + dz] - v3;
-          const norm7z = data.src[dataindex + dy + dz * 2] - v4;
+          const norm7x = data.src[dataindex - dx + dy + dz] - v6;
+          const norm7y = v3 - data.src[dataindex + dy * 2 + dz];
+          const norm7z = v4 - data.src[dataindex + dy + dz * 2];
 
           if (edge & 1) {
             const mu = (isolevel - v0) / (v1 - v0);

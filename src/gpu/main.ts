@@ -26,19 +26,27 @@ for (let z = 0; z < field.depth; z += 1) {
         original[
           (field.depth - y) * field.width * field.height +
             (field.depth - z) * field.width +
-            (field.width - x)
+            x
         ];
     }
   }
 }
 
 const projection = mat4.create();
-const target = vec3.fromValues(100, 80, 80);
-const view = mat4.lookAt(mat4.create(), [100, 80, -320], target, up);
+const target = vec3.fromValues(
+  field.width / 2,
+  field.height / 2,
+  field.depth / 2,
+);
+const view = mat4.lookAt(
+  mat4.create(),
+  [field.width / 2, field.height / 2, field.depth * 2],
+  target,
+  up,
+);
 const viewProjection = mat4.identity(mat4.create());
 
 const canvas = document.getElementById("screen") as HTMLCanvasElement;
-
 listenInputEvents(canvas, ({ keys, delta, buttons }) => {
   if ((keys.Space && keys.ShiftLeft) || buttons === 5) {
     rotateOrbit(view, target, delta);
@@ -170,7 +178,8 @@ requestAnimationFrame(function frame(time) {
   gl.uniformMatrix4fv(viewProjectionLoc, false, viewProjection);
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
-  gl.drawArrays(gl.TRIANGLES, 0, field.width * field.height * field.depth * 15);
+  const count = (field.width - 1) * (field.height - 1) * (field.depth - 1) * 15;
+  gl.drawArrays(gl.TRIANGLES, 0, count);
 
   requestAnimationFrame(frame);
 });
