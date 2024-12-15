@@ -126,7 +126,7 @@ const onPointerEvent = (() => {
   };
 })();
 
-canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+canvas.addEventListener("contextmenu", (e) => !e.ctrlKey && e.preventDefault());
 canvas.addEventListener("pointerdown", onPointerEvent);
 canvas.addEventListener("pointermove", onPointerEvent);
 canvas.addEventListener("pointerup", onPointerEvent);
