@@ -6,7 +6,8 @@
   "author": "olimot",
   "license": "MIT",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "dev": "vite"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

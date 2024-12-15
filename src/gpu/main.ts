@@ -1,10 +1,7 @@
-import { mat4, vec3 } from "gl-matrix";
-import { up } from "../config";
-import { listenInputEvents } from "../input";
-import vertSrc from "./marching-cubes.vert?raw";
-import { moveXY, pinchOrbit, rotateOrbit } from "../orbital";
+import { mat4, ReadonlyVec3, vec3 } from "gl-matrix";
 import rawURL from "../u8-mri-200x160x160.raw?url";
 import triTableURL from "../u8-tri-table-256x16.bin?url";
+import vertSrc from "./marching-cubes.vert?raw";
 
 const triTable = await fetch(triTableURL).then(async (res) => {
   return new Uint8Array(await res.arrayBuffer());
@@ -32,32 +29,107 @@ for (let z = 0; z < field.depth; z += 1) {
   }
 }
 
-const projection = mat4.create();
+// # setup canvas
+const canvas = document.getElementById("screen") as HTMLCanvasElement;
+canvas.style.touchAction = "none";
+
+// ## setup resize handler
+let resizeTask: number = 0;
+new ResizeObserver(([entry]) => {
+  clearTimeout(resizeTask);
+  const [{ inlineSize, blockSize }] = entry.devicePixelContentBoxSize;
+  const size = { width: inlineSize, height: blockSize };
+  resizeTask = setTimeout(() => Object.assign(canvas, size), 150);
+}).observe(canvas, { box: "content-box" });
+
+// # setup camera
+const up: ReadonlyVec3 = vec3.fromValues(0, 1, 0);
+const eye = vec3.fromValues(field.width / 2, field.height / 2, field.depth * 2);
 const target = vec3.fromValues(
   field.width / 2,
   field.height / 2,
   field.depth / 2,
 );
-const view = mat4.lookAt(
-  mat4.create(),
-  [field.width / 2, field.height / 2, field.depth * 2],
-  target,
-  up,
-);
+const view = mat4.lookAt(mat4.create(), eye, target, up);
+const projection = mat4.create();
 const viewProjection = mat4.identity(mat4.create());
+const invViewProj = mat4.identity(mat4.create());
+const near = 0.01;
+const far = 1024;
+const yfov = Math.PI / 4;
 
-const canvas = document.getElementById("screen") as HTMLCanvasElement;
-listenInputEvents(canvas, ({ keys, delta, buttons }) => {
-  if ((keys.Space && keys.ShiftLeft) || buttons === 5) {
-    rotateOrbit(view, target, delta);
-  } else if ((keys.Space && keys.ControlLeft) || buttons === 6) {
-    pinchOrbit(view, target, delta);
-  } else if (keys.Space || buttons === 4) {
-    moveXY(view, target, delta);
-  } else {
-    return;
-  }
-});
+function updateCameraMatrices(target = canvas) {
+  const aspectRatio = target.clientWidth / target.clientHeight;
+  mat4.perspective(projection, yfov, aspectRatio, near, far);
+  mat4.multiply(viewProjection, projection, view);
+  mat4.invert(invViewProj, viewProjection);
+}
+
+// ## add camera control
+const raycastToTargetPlane = (() => {
+  const temp = vec3.create();
+  const temp2 = vec3.create();
+  const temp3 = vec3.create();
+  return (out: vec3, x: number, y: number) => {
+    temp[0] = (x / canvas.clientWidth) * 2 - 1;
+    temp[1] = (-y / canvas.clientHeight) * 2 + 1;
+    temp[2] = -1;
+    const P_0 = vec3.transformMat4(temp, temp, invViewProj);
+    const N = vec3.normalize(temp2, vec3.sub(temp2, eye, target));
+    const V = vec3.normalize(temp3, vec3.sub(temp3, P_0, eye));
+    const d = vec3.dot(target, N);
+
+    // $P = P_0 + \dfrac {-(P_0 \cdot N + d)} {V \cdot N}V$
+    const t = -(vec3.dot(P_0, N) + d) / vec3.dot(V, N);
+    return vec3.scaleAndAdd(out, P_0, V, t);
+  };
+})();
+
+const onPointerEvent = (() => {
+  const temp = vec3.create();
+  const temp2 = vec3.create();
+  const temp3 = vec3.create();
+  return (e: PointerEvent) => {
+    if (!e.buttons || (!e.movementX && !e.movementY)) return;
+    const { offsetX: x, offsetY: y, movementX: dX, movementY: dY } = e;
+
+    if (e.buttons & 1) {
+      const r = vec3.distance(eye, target);
+      const targetToEye = vec3.normalize(temp, vec3.sub(temp, eye, target));
+      const dTheta = -(dX / canvas.clientWidth) * 2;
+      const dPhi = -(dY / canvas.clientHeight) * 2;
+      const theta = Math.atan2(targetToEye[0], targetToEye[2]) + dTheta;
+      let phi = Math.acos(targetToEye[1]) + dPhi;
+      phi = Math.min(Math.max(0.001, phi), Math.PI - 0.001);
+      targetToEye[0] = Math.sin(phi) * Math.sin(theta);
+      targetToEye[1] = Math.cos(phi);
+      targetToEye[2] = Math.sin(phi) * Math.cos(theta);
+      vec3.scaleAndAdd(eye, target, targetToEye, r);
+    } else if (e.buttons & 2) {
+      const position = raycastToTargetPlane(temp, x, y);
+      const prev = raycastToTargetPlane(temp2, x - dX, y - dY);
+      const delta = vec3.subtract(temp3, position, prev);
+      const rDelta = -Math.sign(dX || dY) * vec3.length(delta);
+      const targetToEye = vec3.sub(temp3, eye, target);
+      const r = vec3.length(targetToEye);
+      vec3.scaleAndAdd(eye, target, targetToEye, (r + rDelta) / r);
+    } else if (e.buttons & 4) {
+      const position = raycastToTargetPlane(temp, x, y);
+      const prev = raycastToTargetPlane(temp2, x - dX, y - dY);
+      const delta = vec3.subtract(temp3, position, prev);
+      vec3.sub(target, target, delta);
+      vec3.sub(eye, eye, delta);
+    }
+
+    mat4.lookAt(view, eye, target, up);
+    updateCameraMatrices();
+  };
+})();
+
+canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+canvas.addEventListener("pointerdown", onPointerEvent);
+canvas.addEventListener("pointermove", onPointerEvent);
+canvas.addEventListener("pointerup", onPointerEvent);
 
 const gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -153,18 +225,6 @@ gl.texImage3D(
 );
 gl.uniform1i(fieldLoc, 1);
 
-let resizeTask: number = 0;
-const observer = new ResizeObserver(([entry]) => {
-  const width = entry.devicePixelContentBoxSize[0].inlineSize;
-  const height = entry.devicePixelContentBoxSize[0].blockSize;
-  clearTimeout(resizeTask);
-  resizeTask = setTimeout(() => {
-    canvas.width = width;
-    canvas.height = height;
-  }, 150);
-});
-observer.observe(canvas, { box: "content-box" });
-
 requestAnimationFrame(function frame(time) {
   gl.uniform1f(isolevelLoc, Math.abs(((time / 30) % 511) - 255));
   const aspectRatio = canvas.clientWidth / canvas.clientHeight;
@@ -190,4 +250,5 @@ Object.assign(window, {
   },
 });
 
-export {};
+export { };
+

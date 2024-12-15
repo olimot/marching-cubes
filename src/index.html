@@ -4,16 +4,38 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://olimot.github.io/main.css" />
     <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
     <title>Marching Cubes</title>
   </head>
   <body>
-    <h1>Marching Cubes</h1>
-    <p>
-      <a href="cpu/">CPU version (typescript)</a>
-    </p>
-    <p>
-      <a href="gpu/">GPU version (webgl2)</a>
-    </p>
+    <div class="wrapper">
+      <h1>Marching Cubes</h1>
+      <h4>
+        project demonstrating a basic implementation of the Marching Cubes
+        algorithm using WebGL2 and TypeScript.
+      </h4>
+      <p>
+        <strong>Github Repository:</strong>
+        <a href="https://github.com/olimot/marching-cubes"
+          >https://github.com/olimot/marching-cubes</a
+        >
+      </p>
+      <img src="./marching-cubes-screenshot.png" alt="Screenshot" />
+      <p>
+        <strong><a href="cpu/">CPU version (typescript)</a>:</strong> CPU-based
+        implementation of the Marching Cubes algorithm in TypeScript, generating
+        a static mesh at a fixed isolevel during initialization, designed for
+        simplicity and educational purposes despite its slower performance
+      </p>
+      <p>
+        <strong><a href="gpu/">GPU version (webgl2)</a>:</strong> A
+        GPU-accelerated implementation of the Marching Cubes algorithm using a
+        vertex GLSL shader, where a 3D texture representing the scalar field is
+        processed directly in the shader, and drawArrays() is used with a
+        maximum vertex count while non-existent triangles are efficiently
+        discarded based on the input field.
+      </p>
+    </div>
   </body>
 </html>
